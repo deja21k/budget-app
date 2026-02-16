@@ -1,0 +1,22 @@
+{
+  "name": "budget-app",
+  "version": "1.0.0",
+  "description": "Local-only personal finance app with receipt scanning",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "seed": "cd backend && npm run seed",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "start": "cd backend && npm start",
+    "typecheck": "cd backend && npx tsc --noEmit && cd ../frontend && npx tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rollup-plugin-visualizer": "^6.0.5",
+    "terser": "^5.46.0"
+  },
+  "dependencies": {
+    "@tailwindcss/forms": "^0.5.11"
+  }
+}

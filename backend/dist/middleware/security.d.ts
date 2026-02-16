@@ -1,0 +1,22 @@
+import { Request, Response, NextFunction } from 'express';
+import { ValidationChain } from 'express-validator';
+export declare const sanitizeString: (value: string) => string;
+export declare const validateTransactionType: ValidationChain;
+export declare const validateAmount: ValidationChain;
+export declare const validateDate: ValidationChain;
+export declare const validateCategoryName: ValidationChain;
+export declare const validateMerchant: ValidationChain;
+export declare const validateDescription: ValidationChain;
+export declare const validateRegretFlag: ValidationChain;
+export declare const validateBoolean: (field: string) => ValidationChain;
+export declare const validateId: ValidationChain;
+export declare const validateFilters: ValidationChain[];
+export declare const handleValidationErrors: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const rateLimiter: (req: Request, res: Response, next: NextFunction) => void | Response<any, Record<string, any>>;
+export declare const destructiveRateLimiter: (req: Request, res: Response, next: NextFunction) => void | Response<any, Record<string, any>>;
+export declare const validateRequestSize: (maxSize?: number) => (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const jsonErrorHandler: (err: Error, req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const sanitizeObjectKeys: (obj: any) => any;
+export declare const sanitizeBody: (req: Request, res: Response, next: NextFunction) => void;
+export declare const securityHeaders: (req: Request, res: Response, next: NextFunction) => void;
+//# sourceMappingURL=security.d.ts.map
