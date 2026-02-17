@@ -1,11 +1,10 @@
-import { Link, X, Receipt, AlertCircle } from 'lucide-react';
+import { Link, X, Receipt } from 'lucide-react';
 import Button from '../ui/Button';
 import type { Receipt as ReceiptType } from '../../types';
 import { formatCurrency, getCurrentCurrency } from '../../utils/validation';
 
 interface ReceiptSelectorProps {
   selectedReceipt: ReceiptType | null;
-  onSelect: (receipt: ReceiptType) => void;
   onClear: () => void;
   onOpenSelector: () => void;
   disabled?: boolean;
@@ -13,7 +12,6 @@ interface ReceiptSelectorProps {
 
 export const ReceiptSelector = ({
   selectedReceipt,
-  onSelect,
   onClear,
   onOpenSelector,
   disabled = false,

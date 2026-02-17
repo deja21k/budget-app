@@ -110,6 +110,7 @@ export class TransactionService {
         ? input.recurring_frequency as 'weekly' | 'monthly' | 'yearly' 
         : undefined,
       regret_flag: validateEnum(input.regret_flag, ['yes', 'neutral', 'regret'] as const, 'neutral'),
+      payment_method: validateEnum(input.payment_method, ['cash', 'card', 'bank_transfer', 'digital_wallet', 'other'] as const, 'card'),
       items: sanitizedItems,
     };
     
@@ -162,8 +163,8 @@ export class TransactionService {
       const stmt = db.prepare(`
         INSERT INTO transactions (
           type, amount, category_id, description, merchant, 
-          date, receipt_image_path, ocr_confidence, is_recurring, recurring_frequency, regret_flag
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          date, receipt_image_path, ocr_confidence, is_recurring, recurring_frequency, regret_flag, payment_method
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = stmt.run(
@@ -177,7 +178,8 @@ export class TransactionService {
         sanitized.ocr_confidence ?? null,
         sanitized.is_recurring ? 1 : 0,
         sanitized.recurring_frequency ?? null,
-        sanitized.regret_flag
+        sanitized.regret_flag,
+        sanitized.payment_method
       );
 
       const newTransactionId = result.lastInsertRowid as number;
@@ -393,6 +395,17 @@ export class TransactionService {
         const flag = validateEnum(input.regret_flag, ['yes', 'neutral', 'regret'] as const, 'neutral');
         updates.push('regret_flag = ?');
         values.push(flag);
+      }
+
+      if (input.payment_method !== undefined) {
+        if (input.payment_method === null) {
+          updates.push('payment_method = ?');
+          values.push(null);
+        } else {
+          const method = validateEnum(input.payment_method, ['cash', 'card', 'bank_transfer', 'digital_wallet', 'other'] as const, 'card');
+          updates.push('payment_method = ?');
+          values.push(method);
+        }
       }
 
       // Handle items update

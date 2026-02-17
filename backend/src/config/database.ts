@@ -76,6 +76,13 @@ export function initializeDatabase(): void {
       database.exec(`ALTER TABLE transactions ADD COLUMN recurring_frequency TEXT CHECK(recurring_frequency IN ('weekly', 'monthly', 'yearly'))`);
       console.log('Migration: Added recurring_frequency column to transactions table');
     }
+
+    // Migration: Add payment_method column if it doesn't exist
+    const hasPaymentMethod = tableInfo.some(col => col.name === 'payment_method');
+    if (!hasPaymentMethod) {
+      database.exec(`ALTER TABLE transactions ADD COLUMN payment_method TEXT CHECK(payment_method IN ('cash', 'card', 'bank_transfer', 'digital_wallet', 'other')) DEFAULT 'card'`);
+      console.log('Migration: Added payment_method column to transactions table');
+    }
   } catch (error) {
     console.warn('Migration check for regret_flag failed:', error);
   }

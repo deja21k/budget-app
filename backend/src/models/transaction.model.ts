@@ -30,6 +30,7 @@ export interface Transaction {
   is_recurring: number;
   recurring_frequency: 'weekly' | 'monthly' | 'yearly' | null;
   regret_flag: 'yes' | 'neutral' | 'regret';
+  payment_method: 'cash' | 'card' | 'bank_transfer' | 'digital_wallet' | 'other' | null;
   created_at: string;
   updated_at: string;
   items?: TransactionItem[];
@@ -47,6 +48,7 @@ export interface CreateTransactionInput {
   is_recurring?: boolean;
   recurring_frequency?: 'weekly' | 'monthly' | 'yearly';
   regret_flag?: 'yes' | 'neutral' | 'regret';
+  payment_method?: 'cash' | 'card' | 'bank_transfer' | 'digital_wallet' | 'other';
   items?: CreateTransactionItemInput[];
 }
 
@@ -62,6 +64,7 @@ export interface UpdateTransactionInput {
   is_recurring?: boolean;
   recurring_frequency?: 'weekly' | 'monthly' | 'yearly' | null;
   regret_flag?: 'yes' | 'neutral' | 'regret';
+  payment_method?: 'cash' | 'card' | 'bank_transfer' | 'digital_wallet' | 'other' | null;
   items?: CreateTransactionItemInput[];
 }
 

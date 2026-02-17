@@ -35,9 +35,18 @@ export const RECURRING_FREQUENCIES = [
   { value: 'yearly' as const, label: 'Yearly' },
 ] as const;
 
+export const PAYMENT_METHODS = [
+  { value: 'cash' as const, label: 'Cash' },
+  { value: 'card' as const, label: 'Card' },
+  { value: 'bank_transfer' as const, label: 'Bank Transfer' },
+  { value: 'digital_wallet' as const, label: 'Digital Wallet' },
+  { value: 'other' as const, label: 'Other' },
+] as const;
+
 export type RegretFlag = typeof REGRET_OPTIONS[number]['value'];
 export type RecurringFrequency = typeof RECURRING_FREQUENCIES[number]['value'];
 export type TransactionType = 'income' | 'expense';
+export type PaymentMethod = typeof PAYMENT_METHODS[number]['value'];
 
 /**
  * Validate transaction amount

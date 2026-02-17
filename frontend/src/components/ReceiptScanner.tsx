@@ -9,7 +9,7 @@ import {
   RefreshCw,
   ShoppingCart,
   Calendar,
-  DollarSign,
+  Coins,
   Store,
   AlertTriangle,
   Sparkles,
@@ -735,7 +735,7 @@ const ReceiptScanner = ({ onSuccess }: ReceiptScannerProps) => {
                   step="0.01"
                   value={formData.total}
                   onChange={(e) => setFormData({ ...formData, total: e.target.value })}
-                  leftIcon={<DollarSign className="w-4 h-4" />}
+                  leftIcon={<Coins className="w-4 h-4" />}
                   placeholder="0.00"
                 />
               </div>

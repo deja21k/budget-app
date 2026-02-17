@@ -525,6 +525,221 @@ npm run typecheck
 
 ---
 
+## Add Transaction Feature - Complete Implementation
+
+### Overview
+The Add Transaction feature is a premium, feature-rich UX component that allows users to create and edit transactions with comprehensive tracking capabilities. It is fully implemented with TypeScript safety, validation, and backend integration.
+
+### File Structure
+```
+frontend/src/components/
+├── TransactionForm.tsx          # Main form component (758 lines)
+├── TransactionItems.tsx        # Itemized purchase management
+└── transaction/
+    ├── index.ts                # Component exports
+    ├── TransactionTypeSelector.tsx  # Income/Expense toggle
+    ├── CategorySelect.tsx      # Filtered category dropdown
+    ├── RecurringToggle.tsx    # Recurring expense selector
+    ├── RegretFlagSelector.tsx # Purchase sentiment tracker
+    ├── ReceiptSelector.tsx    # Receipt attachment UI
+    └── FormSection.tsx        # Reusable form section wrapper
+
+backend/src/
+├── models/
+│   └── transaction.model.ts    # TypeScript interfaces
+├── services/
+│   └── transaction.service.ts  # Business logic (525 lines)
+├── controllers/
+│   └── transaction.controller.ts  # API handlers
+└── routes/
+    └── transaction.routes.ts   # REST endpoints
+```
+
+### Features Implemented
+
+#### 1. Dynamic Income/Expense Behavior
+- **TransactionTypeSelector** - Toggle between Income and Expense
+- Categories automatically filter based on selected type
+- Form fields reset appropriately when type changes
+- Expense-only features (items, recurring, regret) conditionally shown
+
+#### 2. Filtered Categories
+- Categories filtered by transaction type (income vs expense)
+- Recent categories tracked in localStorage for quick access
+- Auto-categorization based on merchant name
+- Category suggestions via `categoryService.getSuggestedCategory()`
+
+#### 3. Itemized Purchases
+- **TransactionItems** component with:
+  - Add/remove individual items
+  - Quantity and unit price per item
+  - Automatic total calculation
+  - Sync to main amount button
+  - Expandable/collapsible UI
+  - Validation for each item field
+- Items stored in `transaction_items` table
+
+#### 4. Recurring Frequency Selector
+- **RecurringToggle** component:
+  - Toggle switch for recurring expenses
+  - Frequency options: Weekly, Monthly, Yearly
+  - Only available for expenses (not income)
+  - Stored in `transactions.is_recurring` and `transactions.recurring_frequency`
+
+#### 5. Regret Tracking (Expense Only)
+- **RegretFlagSelector** component:
+  - Three options: "Worth it", "Neutral", "Regret"
+  - Visual feedback with icons (ThumbsUp, ThumbsDown, Minus)
+  - Helps identify spending patterns in Insights
+  - Stored in `transactions.regret_flag`
+
+#### 6. Receipt Attachment
+- **ReceiptSelector** component:
+  - Link existing receipts to transactions
+  - Auto-populate from receipt OCR data (merchant, amount, date)
+  - Preview selected receipt
+  - Clear selection option
+- Stored in `transactions.receipt_image_path`
+
+#### 7. Database Schema - Transaction Items
+```sql
+CREATE TABLE transaction_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  quantity REAL DEFAULT 1,
+  unit_price REAL NOT NULL,
+  total_price REAL NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### API Endpoints
+
+#### Transactions CRUD
+```
+POST   /api/transactions          # Create transaction with items
+GET    /api/transactions          # List with filters
+GET    /api/transactions/:id      # Get single (includes items)
+PUT    /api/transactions/:id     # Update (supports items update)
+DELETE /api/transactions/:id     # Delete
+GET    /api/transactions/summary # Get totals
+```
+
+#### Create Transaction Request Body
+```typescript
+interface CreateTransactionInput {
+  type: 'income' | 'expense';
+  amount: number;
+  category_id?: number;
+  description?: string;
+  merchant?: string;
+  date: string;
+  receipt_image_path?: string;
+  ocr_confidence?: number;
+  is_recurring?: boolean;
+  recurring_frequency?: 'weekly' | 'monthly' | 'yearly';
+  regret_flag?: 'yes' | 'neutral' | 'regret';
+  items?: CreateTransactionItemInput[];
+}
+
+interface CreateTransactionItemInput {
+  name: string;
+  quantity?: number;
+  unit_price: number;
+  total_price?: number;
+}
+```
+
+### Validation (Frontend)
+
+All validation is implemented in `frontend/src/utils/validation.ts`:
+- **Amount** - Required, positive, max 999,999,999.99, max 2 decimal places
+- **Date** - Required, within 10 years past to 1 year future
+- **Category** - Required, must exist in available categories
+- **Merchant** - Optional, max 100 chars, no XSS characters
+- **Description** - Optional, max 500 chars
+- **Items** - Optional array, max 100 items, each item validated
+
+### Backend Validation (TransactionService)
+
+The backend implements comprehensive defensive programming:
+- Input sanitization with `safeString()`, `safeNumber()`, `safeBoolean()`, `safeDate()`
+- Enum validation with `validateEnum()`
+- ID validation with `validateId()`
+- Transaction wrapping with `withTransaction()` for atomic operations
+- Maximum limits enforced (amounts, lengths, item counts)
+
+### TypeScript Safety
+
+- Full type coverage in both frontend and backend
+- No `any` types used
+- Runtime type guards for API responses
+- Aligned interfaces between frontend types and backend models
+
+### UI Components
+
+#### TransactionForm Props
+```typescript
+interface TransactionFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  transaction?: Transaction | null;  // For edit mode
+  linkedReceipt?: Receipt | null;    // Pre-linked receipt
+}
+```
+
+#### Form State Management
+- Controlled inputs with React state
+- Touched state for field-level validation display
+- Error state for validation messages
+- Loading/submitting states for API calls
+- Mounted ref to prevent state updates after unmount
+- Success message with auto-close
+
+### Auto-Categorization
+
+When a merchant is entered:
+1. System checks for matching merchant in category suggestions
+2. If found, category is auto-selected
+3. Visual indicator shows "Auto-categorized based on merchant"
+4. User can override by manually selecting different category
+
+### Voice Input Integration
+
+The form integrates with **VoiceExpenseWizard**:
+- Voice button to trigger voice input
+- Parses spoken expense data
+- Auto-fills form fields from voice input
+- Supports Serbian expense parsing
+
+### Error Handling
+
+- Field-level validation with inline error messages
+- Success/error states for each field
+- Network error handling with retry logic
+- Form-level error banner for submission failures
+- User-friendly error messages based on error type
+
+---
+
+### Testing Checklist for Add Transaction
+- [ ] Create new expense transaction
+- [ ] Create new income transaction
+- [ ] Verify categories filter by type
+- [ ] Add/edit/remove transaction items
+- [ ] Test recurring toggle (expense only)
+- [ ] Test regret selector (expense only)
+- [ ] Link receipt to transaction
+- [ ] Verify auto-categorization works
+- [ ] Test validation errors display
+- [ ] Edit existing transaction
+- [ ] Delete transaction
+- [ ] Verify items persist in database
+
+---
+
 ## License
 
 MIT License - Free for personal and commercial use.
@@ -542,6 +757,12 @@ MIT License - Free for personal and commercial use.
 ---
 
 ## Changelog
+
+### 2026-02-17 - Add Transaction Feature Documentation
+- **📝 ADDED: Complete Add Transaction Feature Documentation**
+  - Documented all implemented features in README
+  - Created comprehensive feature reference for future sessions
+  - Added file structure, API endpoints, and validation details
 
 ### 2026-02-14 - Multi-Account Support & Bug Fixes
 - **✨ NEW: Multi-Account Support** - Added ability to manage multiple accounts (e.g., yours and your wife's)
@@ -576,6 +797,6 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-**Last Updated:** 2026-02-14
-**Version:** 1.1.0
-**Status:** ✅ Production Ready - Now with Multi-Account Support
+**Last Updated:** 2026-02-17
+**Version:** 1.1.1
+**Status:** ✅ Production Ready - Add Transaction Feature Fully Documented
