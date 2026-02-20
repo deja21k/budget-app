@@ -4,7 +4,7 @@ import Button from './ui/Button';
 import Modal from './ui/Modal';
 import Input from './ui/Input';
 import { TransactionItems } from './TransactionItems';
-import { VoiceExpenseWizard } from './VoiceExpenseWizard';
+
 import {
   TransactionTypeSelector,
   CategorySelect,
@@ -28,7 +28,7 @@ import type {
   Transaction,
   CreateTransactionItemInput,
 } from '../types';
-import type { VoiceExpenseData } from '../utils/voiceExpenseTypes';
+
 import {
   validateAmount,
   validateDate,
@@ -124,7 +124,6 @@ export const TransactionForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAutoCategorized, setIsAutoCategorized] = useState(false);
   const [showReceiptSelector, setShowReceiptSelector] = useState(false);
-  const [showVoiceWizard, setShowVoiceWizard] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Refs
@@ -413,75 +412,6 @@ export const TransactionForm = ({
     }
   }, []);
 
-  // Voice expense handler
-  const handleVoiceExpense = useCallback(
-    (data: VoiceExpenseData) => {
-      if (data.merchant) {
-        setFormData((prev) => ({ ...prev, merchant: data.merchant }));
-        setIsAutoCategorized(false);
-      }
-
-      if (data.totalAmount !== null && data.totalAmount !== undefined) {
-        setFormData((prev) => ({ ...prev, amount: String(data.totalAmount) }));
-      }
-
-      if (data.category && categories.length > 0) {
-        const voiceCategoryName = data.category.toLowerCase();
-        const matchedCategory = categories.find(
-          (c) => c.name.toLowerCase() === voiceCategoryName && c.type === 'expense'
-        );
-
-        if (matchedCategory) {
-          setFormData((prev) => ({
-            ...prev,
-            category_id: matchedCategory.id.toString(),
-          }));
-        } else if (data.merchant) {
-          const suggestedCategory = categoryService.getSuggestedCategory(
-            data.merchant,
-            categories
-          );
-          if (suggestedCategory) {
-            setFormData((prev) => ({
-              ...prev,
-              category_id: suggestedCategory.id.toString(),
-            }));
-          }
-        }
-      } else if (data.merchant && categories.length > 0) {
-        const suggestedCategory = categoryService.getSuggestedCategory(
-          data.merchant,
-          categories
-        );
-        if (suggestedCategory) {
-          setFormData((prev) => ({
-            ...prev,
-            category_id: suggestedCategory.id.toString(),
-          }));
-        }
-      }
-
-      if (data.items && data.items.length > 0) {
-        const items: CreateTransactionItemInput[] = data.items.map((item) => ({
-          name: item.name,
-          quantity: 1,
-          unit_price: item.amount || 0,
-        }));
-        setFormData((prev) => ({ ...prev, items }));
-      }
-
-      setTouched({
-        amount: true,
-        date: true,
-        category_id: true,
-        merchant: true,
-      });
-
-      setShowVoiceWizard(false);
-    },
-    [categories]
-  );
-
   // Form submission
   const handleSubmit = async () => {
     if (!isMountedRef.current) return;
@@ -697,8 +627,6 @@ export const TransactionForm = ({
               error={errors.merchant}
               touched={touched.merchant}
               isAutoCategorized={isAutoCategorized}
-              onVoiceInput={() => setShowVoiceWizard(true)}
-              showVoiceButton={formData.type === 'expense'}
             />
 
             {/* Category dropdown - filtered by transaction type */}
@@ -840,14 +768,6 @@ export const TransactionForm = ({
       >
         <ReceiptList receipts={receipts} onSelect={handleReceiptSelect} />
       </Modal>
-
-      {/* Voice Wizard */}
-      {showVoiceWizard && (
-        <VoiceExpenseWizard
-          onComplete={handleVoiceExpense}
-          onCancel={() => setShowVoiceWizard(false)}
-        />
-      )}
     </>
   );
 };

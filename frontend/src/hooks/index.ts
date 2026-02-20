@@ -124,4 +124,3 @@ export function useOnlineStatus(): boolean {
 
 export { useAccount } from './useAccount';
 export { useCameraCapture } from './useCameraCapture';
-export { useSpeechRecognition } from './useSpeechRecognition';

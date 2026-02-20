@@ -7,7 +7,22 @@ A local-only personal finance application with receipt scanning, transaction tra
 - Backend: Node.js + Express + SQLite (better-sqlite3) + Tesseract.js (OCR)
 - Frontend: React 19 + Vite + TypeScript + Tailwind CSS + GSAP
 
-**Status:** ✅ PRODUCTION READY - All critical bugs fixed, 101 issues resolved
+**Status:** ✅ PRODUCTION READY - Voice input removed, camera UI improved
+
+---
+
+## Design Philosophy
+
+This app follows **Linear UX** principles:
+
+- **One Primary Objective per Screen** - No "zig-zagging" content or multi-dimensional scrolling
+- **Radical Pruning** - Features that break user "flow state" are removed (e.g., voice input)
+- **Focused Efficiency** - Speed, clarity, and zero cognitive load
+- **Visual Silence** - Whitespace as a layout tool, minimalist interface
+
+### Recent Simplifications
+- Voice input removed - unreliable for high-precision tasks, breaks flow state
+- Camera scanner redesigned - centered modal instead of fullscreen takeover
 
 ---
 
@@ -706,14 +721,6 @@ When a merchant is entered:
 3. Visual indicator shows "Auto-categorized based on merchant"
 4. User can override by manually selecting different category
 
-### Voice Input Integration
-
-The form integrates with **VoiceExpenseWizard**:
-- Voice button to trigger voice input
-- Parses spoken expense data
-- Auto-fills form fields from voice input
-- Supports Serbian expense parsing
-
 ### Error Handling
 
 - Field-level validation with inline error messages
@@ -758,6 +765,32 @@ MIT License - Free for personal and commercial use.
 
 ## Changelog
 
+### 2026-02-20 - UX Simplification & Camera UI Improvements
+- **🗑️ REMOVED: Voice Input Feature** - Deleted unreliable voice input to reduce complexity and improve user focus
+  - Removed 8 files (~2,738 lines):
+    - `components/VoiceExpenseWizard.tsx` (636 lines)
+    - `components/VoiceInputButton.tsx` (269 lines)
+    - `hooks/useSpeechRecognition.ts` (255 lines)
+    - `utils/voiceService.ts` (188 lines)
+    - `utils/voiceExpenseParser.ts` (523 lines)
+    - `utils/voiceExpenseTypes.ts` (162 lines)
+    - `utils/serbianExpenseParser.ts` (244 lines)
+    - `utils/conversationMachine.ts` (461 lines)
+    - `VOICE_INPUT_TEST_REPORT.md`
+  - Updated `TransactionForm.tsx` - Removed voice imports, state, and wizard
+  - Updated `MerchantSourceField.tsx` - Removed Mic button and voice props
+  - Updated `hooks/index.ts` - Removed useSpeechRecognition export
+  - Bundle size reduced significantly
+
+- **🎨 IMPROVED: Camera Scanner UI** - Redesigned from fullscreen to centered modal
+  - Changed from `fixed inset-0` fullscreen to `fixed inset-0 flex items-center justify-center p-4`
+  - Added `max-w-lg` width constraint and `rounded-3xl` card design
+  - Fixed aspect ratio to `aspect-[3/4]` for portrait receipt scanning
+  - Reduced camera resolution from 1920x1080 to 1280x720 for better performance
+  - Cleaner controls with smaller shutter button
+  - White background with proper modal styling
+  - No more scrolling issues on smaller screens
+
 ### 2026-02-17 - Add Transaction Feature Documentation
 - **📝 ADDED: Complete Add Transaction Feature Documentation**
   - Documented all implemented features in README
@@ -797,6 +830,6 @@ MIT License - Free for personal and commercial use.
 
 ---
 
-**Last Updated:** 2026-02-17
-**Version:** 1.1.1
-**Status:** ✅ Production Ready - Add Transaction Feature Fully Documented
+**Last Updated:** 2026-02-20
+**Version:** 1.2.0
+**Status:** ✅ Production Ready - Voice Input Removed, Camera UI Improved
