@@ -103,8 +103,7 @@ export default function ShoppingList() {
       
       if (res.ok) {
         const updatedItem = await res.json();
-        console.log('Updated item:', updatedItem);
-        setItems(items.map(item => item.id === id ? updatedItem : item));
+        setItems(items => items.map(item => item.id === id ? updatedItem : item));
         fetchData();
       } else {
         console.error('Failed to toggle:', await res.text());
@@ -320,8 +319,13 @@ export default function ShoppingList() {
           </Button>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {items.map((item) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {(['high', 'medium', 'low'] as const).map((importance) => (
+            <div key={importance} className="space-y-2">
+              <h3 className={`font-semibold text-sm uppercase tracking-wide ${importance === 'high' ? 'text-red-500' : importance === 'medium' ? 'text-yellow-500' : 'text-green-500'}`}>
+                {importance} Priority
+              </h3>
+              {items.filter(item => item.importance === importance).map((item) => (
             <div 
               key={item.id} 
               className={`bg-white dark:bg-slate-800 rounded-xl p-4 flex items-center gap-4 border border-slate-200 dark:border-slate-700 ${item.is_completed ? 'opacity-60' : ''}`}
@@ -375,6 +379,8 @@ export default function ShoppingList() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
+            </div>
+          ))}
             </div>
           ))}
         </div>
