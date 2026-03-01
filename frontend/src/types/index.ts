@@ -225,6 +225,7 @@ export interface ShoppingListItem {
   id: number;
   name: string;
   price: number;
+  actual_price?: number | null;
   quantity: number;
   is_completed: number;
   importance: 'high' | 'medium' | 'low';

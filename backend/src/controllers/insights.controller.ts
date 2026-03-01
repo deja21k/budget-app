@@ -3,6 +3,28 @@ import { InsightsService } from '../services/insights.service';
 
 const insightsService = new InsightsService();
 
+function parseMonthParam(month?: string): { startDate?: string; endDate?: string } {
+  if (!month) return {};
+  
+  const monthRegex = /^(\d{4})-(\d{2})$/;
+  const match = month.match(monthRegex);
+  
+  if (!match) return {};
+  
+  const year = parseInt(match[1]);
+  const monthNum = parseInt(match[2]);
+  
+  if (year < 2000 || year > 2100 || monthNum < 1 || monthNum > 12) {
+    return {};
+  }
+  
+  const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, monthNum, 0).getDate();
+  const endDate = `${year}-${String(monthNum).padStart(2, '0')}-${lastDay}`;
+  
+  return { startDate, endDate };
+}
+
 export class InsightsController {
   /**
    * Get comprehensive spending analysis
@@ -10,12 +32,13 @@ export class InsightsController {
    */
   getAnalysis(req: Request, res: Response) {
     try {
-      const { start_date, end_date } = req.query;
+      const { start_date, end_date, month } = req.query;
       
-      const analysis = insightsService.analyzeSpending(
-        start_date as string | undefined,
-        end_date as string | undefined
-      );
+      const monthDates = parseMonthParam(month as string);
+      const start = start_date as string || monthDates.startDate;
+      const end = end_date as string || monthDates.endDate;
+      
+      const analysis = insightsService.analyzeSpending(start, end);
 
       res.json(analysis);
     } catch (error) {
@@ -33,12 +56,13 @@ export class InsightsController {
    */
   getSummary(req: Request, res: Response) {
     try {
-      const { start_date, end_date } = req.query;
+      const { start_date, end_date, month } = req.query;
       
-      const analysis = insightsService.analyzeSpending(
-        start_date as string | undefined,
-        end_date as string | undefined
-      );
+      const monthDates = parseMonthParam(month as string);
+      const start = start_date as string || monthDates.startDate;
+      const end = end_date as string || monthDates.endDate;
+      
+      const analysis = insightsService.analyzeSpending(start, end);
 
       res.json({
         summary_text: analysis.summary_text,

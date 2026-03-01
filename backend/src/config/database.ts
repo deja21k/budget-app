@@ -109,6 +109,7 @@ export function initializeDatabase(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       price REAL NOT NULL DEFAULT 0,
+      actual_price REAL,
       quantity INTEGER DEFAULT 1,
       is_completed INTEGER DEFAULT 0,
       importance TEXT CHECK(importance IN ('high', 'medium', 'low')) DEFAULT 'medium',

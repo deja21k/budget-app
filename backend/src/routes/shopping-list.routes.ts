@@ -6,6 +6,7 @@ const router = Router();
 router.get('/', shoppingListController.getAll);
 router.get('/summary', shoppingListController.getSummary);
 router.get('/prediction', shoppingListController.getPrediction);
+router.get('/price-prediction', shoppingListController.predictPrice);
 router.get('/:id', shoppingListController.getById);
 router.post('/', shoppingListController.create);
 router.put('/:id', shoppingListController.update);

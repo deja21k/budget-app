@@ -67,6 +67,10 @@ export class ShoppingListService {
       updates.push('quantity = ?');
       values.push(input.quantity);
     }
+    if (input.actual_price !== undefined) {
+      updates.push('actual_price = ?');
+      values.push(input.actual_price);
+    }
     if (input.is_completed !== undefined) {
       updates.push('is_completed = ?');
       values.push(input.is_completed ? 1 : 0);

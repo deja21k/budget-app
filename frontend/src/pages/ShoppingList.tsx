@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { ShoppingListItem, ShoppingListSummary, SpendingPrediction, CreateShoppingListItemInput } from '../types';
 import { formatCurrency, getCurrentCurrency } from '../utils/validation';
 import { settingsService } from '../services/api';
@@ -7,6 +7,18 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
 const API_BASE = 'http://localhost:3000/api';
+
+interface StorePrice {
+  store: string;
+  price: number | null;
+  url?: string;
+}
+
+interface PricePrediction {
+  itemName: string;
+  prices: StorePrice[];
+  suggestedPrice: number | null;
+}
 
 export default function ShoppingList() {
   const [items, setItems] = useState<ShoppingListItem[]>([]);
@@ -22,6 +34,10 @@ export default function ShoppingList() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pricePrediction, setPricePrediction] = useState<PricePrediction | null>(null);
+  const [loadingPrediction, setLoadingPrediction] = useState(false);
+  const [editingPriceId, setEditingPriceId] = useState<number | null>(null);
+  const [actualPrice, setActualPrice] = useState<string>('');
   const currency = getCurrentCurrency();
   const settings = settingsService.getSettings();
   const monthlyBudget = settings.monthlyBudget;
@@ -53,6 +69,33 @@ export default function ShoppingList() {
       setLoading(false);
     }
   };
+
+  const fetchPricePrediction = useCallback(async (name: string) => {
+    if (!name.trim() || name.length < 2) {
+      setPricePrediction(null);
+      return;
+    }
+    
+    setLoadingPrediction(true);
+    try {
+      const res = await fetch(`${API_BASE}/shopping-list/price-prediction?item=${encodeURIComponent(name)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPricePrediction(data);
+      }
+    } catch (err) {
+      console.error('Error fetching price prediction:', err);
+    } finally {
+      setLoadingPrediction(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchPricePrediction(newItem.name);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [newItem.name, fetchPricePrediction]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +168,29 @@ export default function ShoppingList() {
       }
     } catch (error) {
       console.error('Error deleting item:', error);
+    }
+  };
+
+  const handleUpdateActualPrice = async (id: number) => {
+    const price = parseFloat(actualPrice);
+    if (isNaN(price) || price <= 0) return;
+    
+    try {
+      const res = await fetch(`${API_BASE}/shopping-list/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actual_price: price }),
+      });
+      
+      if (res.ok) {
+        const updatedItem = await res.json();
+        setItems(items.map(item => item.id === id ? updatedItem : item));
+        setEditingPriceId(null);
+        setActualPrice('');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error updating actual price:', error);
     }
   };
 
@@ -211,6 +277,42 @@ export default function ShoppingList() {
                 />
               </div>
             </div>
+
+            {pricePrediction && pricePrediction.suggestedPrice && (
+              <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+                  {loadingPrediction ? 'Searching stores...' : `Tap to select price:`}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {pricePrediction.prices
+                    .filter(p => p.price !== null)
+                    .sort((a, b) => (a.price || 0) - (b.price || 0))
+                    .map((p, idx) => (
+                      <button
+                        key={p.store}
+                        type="button"
+                        onClick={() => setNewItem({ ...newItem, price: p.price || 0 })}
+                        className={`text-xs px-3 py-2 rounded-lg border flex items-center gap-2 transition-all ${
+                          p.price === pricePrediction.suggestedPrice
+                            ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300 font-medium'
+                            : idx === 0
+                            ? 'bg-yellow-100 dark:bg-yellow-900 border-yellow-500 text-yellow-700 dark:text-yellow-300 font-medium'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-blue-400'
+                        }`}
+                      >
+                        <span>{p.store}</span>
+                        <span className="font-bold">{p.price?.toLocaleString('sr-RS')} RSD</span>
+                        {idx === 0 && <span className="text-xs bg-yellow-500 text-white px-1 rounded">CHEAPEST</span>}
+                      </button>
+                    ))}
+                </div>
+                {newItem.price > 0 && (
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                    Selected: {newItem.price.toLocaleString('sr-RS')} RSD
+                  </p>
+                )}
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -363,9 +465,53 @@ export default function ShoppingList() {
               </span>
               
               <div className="text-right flex-shrink-0">
-                <p className={`font-bold text-slate-900 dark:text-white ${item.is_completed ? 'line-through' : ''}`}>
-                  {formatCurrency(item.price * item.quantity, currency)}
-                </p>
+                {editingPriceId === item.id ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={actualPrice}
+                      onChange={(e) => setActualPrice(e.target.value)}
+                      placeholder="Paid"
+                      className="w-20 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleUpdateActualPrice(item.id)}
+                      className="p-1 text-green-600 hover:text-green-700"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => { setEditingPriceId(null); setActualPrice(''); }}
+                      className="p-1 text-slate-400 hover:text-slate-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <p className={`font-bold text-slate-900 dark:text-white ${item.is_completed ? 'line-through' : ''}`}>
+                      {formatCurrency(item.price * item.quantity, currency)}
+                    </p>
+                    {item.actual_price && item.actual_price !== item.price && (
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        Paid: {formatCurrency(item.actual_price * item.quantity, currency)}
+                      </p>
+                    )}
+                    {!item.is_completed && (
+                      <button
+                        onClick={() => { setEditingPriceId(item.id); setActualPrice(item.actual_price?.toString() || item.price.toString()); }}
+                        className="text-xs text-blue-500 hover:text-blue-600"
+                      >
+                        Edit price
+                      </button>
+                    )}
+                  </>
+                )}
                 {item.quantity > 1 && (
                   <p className="text-xs text-slate-400">x{item.quantity}</p>
                 )}
