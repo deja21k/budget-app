@@ -12,6 +12,7 @@ const category_routes_1 = __importDefault(require("./routes/category.routes"));
 const ocr_routes_1 = __importDefault(require("./routes/ocr.routes"));
 const insights_routes_1 = __importDefault(require("./routes/insights.routes"));
 const export_routes_1 = __importDefault(require("./routes/export.routes"));
+const shopping_list_routes_1 = __importDefault(require("./routes/shopping-list.routes"));
 const security_1 = require("./middleware/security");
 const upload_1 = require("./middleware/upload");
 const app = (0, express_1.default)();
@@ -44,6 +45,7 @@ app.use('/api/categories', category_routes_1.default);
 app.use('/api/ocr', ocr_routes_1.default);
 app.use('/api/insights', insights_routes_1.default);
 app.use('/api/export', export_routes_1.default);
+app.use('/api/shopping-list', shopping_list_routes_1.default);
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',

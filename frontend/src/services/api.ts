@@ -566,6 +566,7 @@ export const settingsService = {
       timezone: 'Europe/Belgrade',
       dateFormat: 'DD/MM/YYYY',
       theme: 'system',
+      monthlyBudget: 100000,
       notifications: {
         budgetAlerts: true,
         weeklySummary: true,

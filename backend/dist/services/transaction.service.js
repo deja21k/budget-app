@@ -93,6 +93,7 @@ class TransactionService {
                 ? input.recurring_frequency
                 : undefined,
             regret_flag: (0, defensive_1.validateEnum)(input.regret_flag, ['yes', 'neutral', 'regret'], 'neutral'),
+            payment_method: (0, defensive_1.validateEnum)(input.payment_method, ['cash', 'card', 'bank_transfer', 'digital_wallet', 'other'], 'card'),
             items: sanitizedItems,
         };
         return { valid: true, sanitized };
@@ -137,10 +138,10 @@ class TransactionService {
             const stmt = db.prepare(`
         INSERT INTO transactions (
           type, amount, category_id, description, merchant, 
-          date, receipt_image_path, ocr_confidence, is_recurring, recurring_frequency, regret_flag
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          date, receipt_image_path, ocr_confidence, is_recurring, recurring_frequency, regret_flag, payment_method
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-            const result = stmt.run(sanitized.type, sanitized.amount, sanitized.category_id ?? null, sanitized.description ?? null, sanitized.merchant ?? null, sanitized.date, sanitized.receipt_image_path ?? null, sanitized.ocr_confidence ?? null, sanitized.is_recurring ? 1 : 0, sanitized.recurring_frequency ?? null, sanitized.regret_flag);
+            const result = stmt.run(sanitized.type, sanitized.amount, sanitized.category_id ?? null, sanitized.description ?? null, sanitized.merchant ?? null, sanitized.date, sanitized.receipt_image_path ?? null, sanitized.ocr_confidence ?? null, sanitized.is_recurring ? 1 : 0, sanitized.recurring_frequency ?? null, sanitized.regret_flag, sanitized.payment_method);
             const newTransactionId = result.lastInsertRowid;
             // Create items if provided
             if (sanitized.items && sanitized.items.length > 0) {
@@ -323,6 +324,17 @@ class TransactionService {
                 const flag = (0, defensive_1.validateEnum)(input.regret_flag, ['yes', 'neutral', 'regret'], 'neutral');
                 updates.push('regret_flag = ?');
                 values.push(flag);
+            }
+            if (input.payment_method !== undefined) {
+                if (input.payment_method === null) {
+                    updates.push('payment_method = ?');
+                    values.push(null);
+                }
+                else {
+                    const method = (0, defensive_1.validateEnum)(input.payment_method, ['cash', 'card', 'bank_transfer', 'digital_wallet', 'other'], 'card');
+                    updates.push('payment_method = ?');
+                    values.push(method);
+                }
             }
             // Handle items update
             if (input.items !== undefined) {

@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions';
 import Receipts from './pages/Receipts';
 import Insights from './pages/Insights';
 import Settings from './pages/Settings';
+import ShoppingList from './pages/ShoppingList';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/receipts" element={<Receipts />} />
               <Route path="/insights" element={<Insights />} />
+              <Route path="/shopping-list" element={<ShoppingList />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>

@@ -103,6 +103,25 @@ export function initializeDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction ON transaction_items(transaction_id);
   `);
 
+  // Shopping List table
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS shopping_list (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      price REAL NOT NULL DEFAULT 0,
+      quantity INTEGER DEFAULT 1,
+      is_completed INTEGER DEFAULT 0,
+      importance TEXT CHECK(importance IN ('high', 'medium', 'low')) DEFAULT 'medium',
+      category TEXT,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_shopping_list_completed ON shopping_list(is_completed);
+    CREATE INDEX IF NOT EXISTS idx_shopping_list_importance ON shopping_list(importance);
+  `);
+
   // Create indexes after tables are ready
   database.exec(`
     -- Indexes for performance

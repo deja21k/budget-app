@@ -6,7 +6,8 @@ import {
   Settings,
   TrendingUp,
   Camera,
-  Sparkles
+  Sparkles,
+  ShoppingCart
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
@@ -22,6 +23,7 @@ const navItems: NavItem[] = [
   { to: '/', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard' },
   { to: '/transactions', icon: <Wallet className="w-5 h-5" />, label: 'Transactions' },
   { to: '/receipts', icon: <Camera className="w-5 h-5" />, label: 'Scan Receipt' },
+  { to: '/shopping-list', icon: <ShoppingCart className="w-5 h-5" />, label: 'Shopping List' },
   { to: '/insights', icon: <PieChart className="w-5 h-5" />, label: 'Insights' },
 ];
 

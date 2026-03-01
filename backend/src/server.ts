@@ -8,6 +8,7 @@ import categoryRoutes from './routes/category.routes';
 import ocrRoutes from './routes/ocr.routes';
 import insightsRoutes from './routes/insights.routes';
 import exportRoutes from './routes/export.routes';
+import shoppingListRoutes from './routes/shopping-list.routes';
 import {
   rateLimiter,
   jsonErrorHandler,
@@ -55,6 +56,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/ocr', ocrRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/shopping-list', shoppingListRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ 

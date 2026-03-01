@@ -110,6 +110,12 @@ function initializeDatabase() {
             database.exec(`ALTER TABLE transactions ADD COLUMN recurring_frequency TEXT CHECK(recurring_frequency IN ('weekly', 'monthly', 'yearly'))`);
             console.log('Migration: Added recurring_frequency column to transactions table');
         }
+        // Migration: Add payment_method column if it doesn't exist
+        const hasPaymentMethod = tableInfo.some(col => col.name === 'payment_method');
+        if (!hasPaymentMethod) {
+            database.exec(`ALTER TABLE transactions ADD COLUMN payment_method TEXT CHECK(payment_method IN ('cash', 'card', 'bank_transfer', 'digital_wallet', 'other')) DEFAULT 'card'`);
+            console.log('Migration: Added payment_method column to transactions table');
+        }
     }
     catch (error) {
         console.warn('Migration check for regret_flag failed:', error);
@@ -128,6 +134,24 @@ function initializeDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction ON transaction_items(transaction_id);
+  `);
+    // Shopping List table
+    database.exec(`
+    CREATE TABLE IF NOT EXISTS shopping_list (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      price REAL NOT NULL DEFAULT 0,
+      quantity INTEGER DEFAULT 1,
+      is_completed INTEGER DEFAULT 0,
+      importance TEXT CHECK(importance IN ('high', 'medium', 'low')) DEFAULT 'medium',
+      category TEXT,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_shopping_list_completed ON shopping_list(is_completed);
+    CREATE INDEX IF NOT EXISTS idx_shopping_list_importance ON shopping_list(importance);
   `);
     // Create indexes after tables are ready
     database.exec(`

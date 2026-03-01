@@ -1,10 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Wallet, Camera, PieChart } from 'lucide-react';
+import { LayoutDashboard, Wallet, PieChart, ShoppingCart } from 'lucide-react';
 
 const mobileNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/transactions', icon: Wallet, label: 'Transactions' },
-  { to: '/receipts', icon: Camera, label: 'Scan' },
+  { to: '/shopping-list', icon: ShoppingCart, label: 'List' },
   { to: '/insights', icon: PieChart, label: 'Insights' },
 ];
 
