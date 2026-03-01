@@ -2,6 +2,7 @@ export interface ShoppingListItem {
     id: number;
     name: string;
     price: number;
+    actual_price?: number | null;
     quantity: number;
     is_completed: number;
     importance: 'high' | 'medium' | 'low';
@@ -21,6 +22,7 @@ export interface CreateShoppingListItemInput {
 export interface UpdateShoppingListItemInput {
     name?: string;
     price?: number;
+    actual_price?: number | null;
     quantity?: number;
     is_completed?: boolean;
     importance?: 'high' | 'medium' | 'low';

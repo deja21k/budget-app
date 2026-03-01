@@ -6,6 +6,7 @@ const router = (0, express_1.Router)();
 router.get('/', shopping_list_controller_1.shoppingListController.getAll);
 router.get('/summary', shopping_list_controller_1.shoppingListController.getSummary);
 router.get('/prediction', shopping_list_controller_1.shoppingListController.getPrediction);
+router.get('/price-prediction', shopping_list_controller_1.shoppingListController.predictPrice);
 router.get('/:id', shopping_list_controller_1.shoppingListController.getById);
 router.post('/', shopping_list_controller_1.shoppingListController.create);
 router.put('/:id', shopping_list_controller_1.shoppingListController.update);

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { shoppingListService } from '../services/shopping-list.service';
 import { CreateShoppingListItemInput, UpdateShoppingListItemInput } from '../models/shopping-list.model';
+import { predictPrices } from '../services/price-prediction.service';
 
 export class ShoppingListController {
   async getAll(req: Request, res: Response) {
@@ -123,6 +124,20 @@ export class ShoppingListController {
     } catch (error) {
       console.error('Error clearing completed items:', error);
       res.status(500).json({ error: 'Failed to clear completed items' });
+    }
+  }
+
+  async predictPrice(req: Request, res: Response) {
+    try {
+      const { item } = req.query;
+      if (!item || typeof item !== 'string') {
+        return res.status(400).json({ error: 'Item name is required' });
+      }
+      const prediction = await predictPrices(item);
+      res.json(prediction);
+    } catch (error) {
+      console.error('Error predicting price:', error);
+      res.status(500).json({ error: 'Failed to predict price' });
     }
   }
 }

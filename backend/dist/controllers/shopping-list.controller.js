@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.shoppingListController = exports.ShoppingListController = void 0;
 const shopping_list_service_1 = require("../services/shopping-list.service");
+const price_prediction_service_1 = require("../services/price-prediction.service");
 class ShoppingListController {
     async getAll(req, res) {
         try {
@@ -113,6 +114,20 @@ class ShoppingListController {
         catch (error) {
             console.error('Error clearing completed items:', error);
             res.status(500).json({ error: 'Failed to clear completed items' });
+        }
+    }
+    async predictPrice(req, res) {
+        try {
+            const { item } = req.query;
+            if (!item || typeof item !== 'string') {
+                return res.status(400).json({ error: 'Item name is required' });
+            }
+            const prediction = await (0, price_prediction_service_1.predictPrices)(item);
+            res.json(prediction);
+        }
+        catch (error) {
+            console.error('Error predicting price:', error);
+            res.status(500).json({ error: 'Failed to predict price' });
         }
     }
 }

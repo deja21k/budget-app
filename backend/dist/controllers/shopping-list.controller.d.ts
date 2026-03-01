@@ -9,6 +9,7 @@ export declare class ShoppingListController {
     getSummary(req: Request, res: Response): Promise<void>;
     getPrediction(req: Request, res: Response): Promise<void>;
     clearCompleted(req: Request, res: Response): Promise<void>;
+    predictPrice(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;
 }
 export declare const shoppingListController: ShoppingListController;
 //# sourceMappingURL=shopping-list.controller.d.ts.map
