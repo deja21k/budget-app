@@ -17,6 +17,7 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAccount } from '../../hooks/useAccount';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -45,6 +46,7 @@ const getInitials = (name: string) => {
 };
 
 const Header = ({ onMenuClick }: HeaderProps) => {
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAddAccount, setShowAddAccount] = useState(false);
@@ -55,6 +57,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const [editColor, setEditColor] = useState('');
   const [editAvatar, setEditAvatar] = useState<string | undefined>(undefined);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const   fileInputRef = useRef<HTMLInputElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -117,6 +120,22 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     }
   };
 
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/transactions?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (searchQuery.trim()) {
+      navigate(`/transactions?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    } else {
+      navigate('/transactions');
+    }
+  };
+
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -167,6 +186,9 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             <input
               type="text"
               placeholder="Search transactions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="
                 w-64 pl-10 pr-10 py-2 rounded-xl
                 bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700
@@ -175,9 +197,12 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                 transition-all duration-200
               "
             />
-            <div className="absolute right-3 text-xs text-slate-400 font-medium">
+            <button
+              onClick={handleSearchClick}
+              className="absolute right-3 text-xs text-slate-400 font-medium hover:text-primary-500"
+            >
               ⌘K
-            </div>
+            </button>
           </div>
         </div>
 
@@ -372,7 +397,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                           value={newAccountName}
                           onChange={(e) => setNewAccountName(e.target.value)}
                           placeholder="Account name..."
-                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                          className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleAddAccount();

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, RefreshCw, TrendingUp, TrendingDown, DollarSign, Calendar, Wallet } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -11,6 +12,8 @@ import { formatCurrency, getCurrentCurrency } from '../utils/defensive';
 
 const Transactions = () => {
   const currency = getCurrentCurrency();
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -266,6 +269,7 @@ const Transactions = () => {
               categories={categories}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              initialSearch={initialSearch}
             />
           )}
         </div>

@@ -25,6 +25,7 @@ interface TransactionListProps {
   categories: Category[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: number) => void;
+  initialSearch?: string;
 }
 
 interface Filters {
@@ -38,10 +39,10 @@ interface Filters {
 
 const DEBOUNCE_DELAY = 300;
 
-const TransactionList = ({ transactions, categories, onEdit, onDelete }: TransactionListProps) => {
+const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSearch = '' }: TransactionListProps) => {
   const currency = getCurrentCurrency();
   const [filters, setFilters] = useState<Filters>({
-    search: '',
+    search: initialSearch,
     type: 'all',
     category_id: '',
     dateRange: 'all',

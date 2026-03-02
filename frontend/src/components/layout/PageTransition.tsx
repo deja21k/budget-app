@@ -13,21 +13,16 @@ const PageTransition = ({ children }: PageTransitionProps) => {
     const page = pageRef.current;
     if (!page) return;
 
-    // Simple fade-in animation using CSS
-    page.style.opacity = '0';
-    page.style.transform = 'translateY(10px)';
-    
-    const timer = setTimeout(() => {
-      page.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      page.style.opacity = '1';
-      page.style.transform = 'translateY(0)';
-    }, 50);
+    // Use CSS animation instead of JS to avoid scroll interference
+    page.style.animation = 'none';
+    // Trigger reflow
+    page.offsetHeight; 
+    page.style.animation = 'fadeIn 0.3s ease forwards';
 
-    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   return (
-    <div ref={pageRef} className="min-h-full">
+    <div ref={pageRef} className="min-h-full" style={{ opacity: 1 }}>
       {children}
     </div>
   );
