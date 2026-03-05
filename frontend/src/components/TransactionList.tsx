@@ -330,6 +330,8 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSe
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
+              id="transaction-search"
+              name="transactionSearch"
               type="text"
               placeholder="Search transactions..."
               value={filters.search}
@@ -379,6 +381,8 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSe
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
               <select
+                id="filter-type"
+                name="filterType"
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value as Filters['type'] })}
                 className="
@@ -399,6 +403,8 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSe
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
               <select
+                id="filter-category"
+                name="filterCategory"
                 value={filters.category_id}
                 onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
                 className="
@@ -420,6 +426,8 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSe
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Date Range</label>
               <select
+                id="filter-date-range"
+                name="filterDateRange"
                 value={filters.dateRange}
                 onChange={(e) => setFilters({ ...filters, dateRange: e.target.value as Filters['dateRange'] })}
                 className="
@@ -457,6 +465,8 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSe
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Start Date</label>
                   <input
+                    id="filter-start-date"
+                    name="startDate"
                     type="date"
                     value={filters.startDate}
                     onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
@@ -473,6 +483,8 @@ const TransactionList = ({ transactions, categories, onEdit, onDelete, initialSe
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">End Date</label>
                   <input
+                    id="filter-end-date"
+                    name="endDate"
                     type="date"
                     value={filters.endDate}
                     onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}

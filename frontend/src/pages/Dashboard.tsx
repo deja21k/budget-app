@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import Card, { CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageTransition from '../components/layout/PageTransition';
-import { transactionService, receiptService } from '../services/api';
+import { transactionService, receiptService, settingsService } from '../services/api';
 import type { Transaction, Receipt as ReceiptType } from '../types';
 import { formatCurrency, getCurrentCurrency } from '../utils/defensive';
 
@@ -34,6 +34,9 @@ const Dashboard = () => {
     expense: 0,
     change: { income: 0, expense: 0 },
   });
+  
+  const settings = settingsService.getSettings();
+  const monthlyBudget = settings.monthlyBudget || 5000;
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
@@ -196,12 +199,14 @@ const Dashboard = () => {
                 variant="secondary"
                 onClick={() => navigate('/transactions')}
                 leftIcon={<Plus className="w-4 h-4" />}
+                data-testid="add-transaction-btn"
               >
                 Add Transaction
               </Button>
               <Button
                 onClick={() => navigate('/receipts')}
                 leftIcon={<ReceiptIcon className="w-4 h-4" />}
+                data-testid="scan-receipt-btn"
               >
                 Scan Receipt
               </Button>
@@ -220,13 +225,14 @@ const Dashboard = () => {
                 hover
                 hoverScale
                 onClick={() => navigate('/transactions')}
+                data-testid={index === 0 ? 'dashboard-balance' : undefined}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-500 mb-2">
                       {stat.title}
                     </p>
-                    <p className="text-2xl font-bold text-slate-900 mb-2">
+                    <p className="text-2xl font-bold text-slate-900 mb-2" data-testid={index === 0 ? 'balance-amount' : undefined}>
                       {isLoading ? (
                         <span className="inline-block w-20 h-8 bg-slate-200 rounded-lg animate-pulse" />
                       ) : (
@@ -242,7 +248,7 @@ const Dashboard = () => {
                             : 'bg-danger-100 text-danger-700'
                           }
                         `}>
-                          {stat.isPositive ? '+' : ''}{stat.change}
+                          {stat.change}
                         </span>
                         <span className="text-xs text-slate-400">from last month</span>
                       </div>
@@ -422,30 +428,30 @@ const Dashboard = () => {
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-sm font-medium text-slate-600">Spent</span>
                     <span className="font-bold text-slate-900">
-                      {formatCurrency(monthlyStats.expense, currency)} <span className="text-slate-400 font-normal">/ {formatCurrency(5000, currency)}</span>
+                      {formatCurrency(monthlyStats.expense, currency)} <span className="text-slate-400 font-normal">/ {formatCurrency(monthlyBudget, currency)}</span>
                     </span>
                   </div>
                   <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                     <div 
                       className="h-full rounded-full transition-all duration-700 ease-premium"
                       style={{ 
-                        width: `${Math.min((monthlyStats.expense / 5000) * 100, 100)}%`,
+                        width: `${Math.min((monthlyStats.expense / monthlyBudget) * 100, 100)}%`,
                         background: 'linear-gradient(90deg, #4f46e5 0%, #6366f1 50%, #8b5cf6 100%)'
                       }}
                     />
                   </div>
                   <div className="flex justify-between items-center mt-3">
                     <p className="text-xs text-slate-500">
-                      {((monthlyStats.expense / 5000) * 100).toFixed(1)}% of monthly budget
+                      {((monthlyStats.expense / monthlyBudget) * 100).toFixed(1)}% of monthly budget
                     </p>
                     <span className={`
                       text-xs font-semibold px-2 py-1 rounded-full
-                      ${monthlyStats.expense > 4000 
+                      ${monthlyStats.expense > monthlyBudget * 0.8 
                         ? 'bg-warning-100 text-warning-700' 
                         : 'bg-success-100 text-success-700'
                       }
                     `}>
-                      {monthlyStats.expense > 4000 ? 'Getting Close' : 'On Track'}
+                      {monthlyStats.expense > monthlyBudget * 0.8 ? 'Getting Close' : 'On Track'}
                     </span>
                   </div>
                 </div>
@@ -454,7 +460,7 @@ const Dashboard = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-600">Remaining</span>
                     <span className="font-bold text-2xl text-slate-900">
-                      {formatCurrency(Math.max(5000 - monthlyStats.expense, 0), currency)}
+                      {formatCurrency(Math.max(monthlyBudget - monthlyStats.expense, 0), currency)}
                     </span>
                   </div>
                 </div>

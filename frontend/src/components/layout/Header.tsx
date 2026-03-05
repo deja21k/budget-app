@@ -1,6 +1,5 @@
 import { 
   Bell, 
-  Menu, 
   Search, 
   Settings, 
   ChevronDown, 
@@ -20,7 +19,6 @@ import { useAccount } from '../../hooks/useAccount';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
-  onMenuClick?: () => void;
 }
 
 const PRESET_COLORS = [
@@ -45,7 +43,7 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
-const Header = ({ onMenuClick }: HeaderProps) => {
+const Header = () => {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -81,14 +79,15 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Reset edit form when opening edit modal
-  useEffect(() => {
-    if (showEditModal && currentAccount) {
+  // Open edit modal with current account data
+  const handleOpenEditModal = () => {
+    if (currentAccount) {
       setEditName(currentAccount.name);
       setEditColor(currentAccount.color);
       setEditAvatar(currentAccount.avatar);
+      setShowEditModal(true);
     }
-  }, [showEditModal, currentAccount]);
+  };
 
   const handleAddAccount = () => {
     if (newAccountName.trim()) {
@@ -172,18 +171,12 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       <div className="flex items-center justify-between h-16 px-4 lg:px-8">
         {/* Left side - Mobile menu & Search */}
         <div className="flex items-center gap-4">
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-          </button>
-          
           {/* Search bar - Hidden on mobile */}
           <div className="hidden md:flex items-center relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
+              id="global-search"
+              name="search"
               type="text"
               placeholder="Search transactions..."
               value={searchQuery}
@@ -302,7 +295,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Current Account</p>
                     <button
-                      onClick={() => setShowEditModal(true)}
+                      onClick={handleOpenEditModal}
                       className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
                     >
                       <Edit3 className="w-3 h-3" />
@@ -312,7 +305,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <button
-                        onClick={() => setShowEditModal(true)}
+                        onClick={handleOpenEditModal}
                         className="relative group cursor-pointer"
                       >
                         <div 
@@ -393,6 +386,8 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                     <div className="px-2 py-2">
                       <div className="flex gap-2">
                         <input
+                          id="new-account-name"
+                          name="newAccountName"
                           type="text"
                           value={newAccountName}
                           onChange={(e) => setNewAccountName(e.target.value)}
@@ -589,6 +584,8 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               Account Name
             </label>
             <input
+              id="account-name"
+              name="accountName"
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
@@ -632,12 +629,16 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               <label className="text-sm text-slate-600">Custom:</label>
               <div className="flex items-center gap-2">
                 <input
+                  id="account-color-picker"
+                  name="accountColorPicker"
                   type="color"
                   value={editColor}
                   onChange={(e) => setEditColor(e.target.value)}
                   className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0"
                 />
                 <input
+                  id="account-color"
+                  name="accountColor"
                   type="text"
                   value={editColor}
                   onChange={(e) => setEditColor(e.target.value)}
