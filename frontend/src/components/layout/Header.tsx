@@ -308,23 +308,6 @@ const Header = () => {
               </div>
             )}
           </div>
-                <div className="max-h-80 overflow-y-auto">
-                  <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-b border-slate-50 dark:border-slate-700">
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center flex-shrink-0">
-                        <Bell className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">New feature available</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Try our new AI-powered receipt scanning</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">2 hours ago</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
