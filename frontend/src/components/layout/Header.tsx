@@ -10,13 +10,16 @@ import {
   Trash2,
   AlertTriangle,
   Check,
-  Palette
+  Palette,
+  CreditCard
 } from 'lucide-react';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAccount } from '../../hooks/useAccount';
 import { useNavigate } from 'react-router-dom';
+import { transactionService, settingsService } from '../../services/api';
+import type { Transaction } from '../../types';
 
 interface HeaderProps {
 }
@@ -56,11 +59,38 @@ const Header = () => {
   const [editAvatar, setEditAvatar] = useState<string | undefined>(undefined);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const   fileInputRef = useRef<HTMLInputElement>(null);
+  const [billNotifications, setBillNotifications] = useState<Transaction[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   
   const { accounts, currentAccount, switchAccount, addAccount, removeAccount, updateAccount } = useAccount();
+
+  // Fetch bill notifications
+  useEffect(() => {
+    const fetchBillNotifications = async () => {
+      const settings = settingsService.getSettings();
+      if (!settings.notifications?.recurringReminders) return;
+
+      try {
+        const transactions = await transactionService.getTransactions({ limit: 100 });
+        const today = new Date();
+        const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+        const upcomingBills = transactions.filter(t => {
+          if (!t.is_recurring || t.type !== 'expense') return false;
+          const txDate = new Date(t.date);
+          return txDate >= today && txDate <= threeDaysLater;
+        });
+
+        setBillNotifications(upcomingBills);
+      } catch (error) {
+        console.error('Failed to fetch bill notifications:', error);
+      }
+    };
+
+    fetchBillNotifications();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -223,13 +253,61 @@ const Header = () => {
                   bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700
                   overflow-hidden z-[60] animate-fadeIn
                 "
+                style={{ position: 'fixed' }}
               >
                 <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                   <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
-                  <span className="text-xs text-primary-600 dark:text-primary-400 font-medium cursor-pointer hover:underline">
-                    Mark all read
-                  </span>
+                  {billNotifications.length > 0 && (
+                    <span 
+                      className="text-xs text-primary-600 dark:text-primary-400 font-medium cursor-pointer hover:underline"
+                      onClick={() => setBillNotifications([])}
+                    >
+                      Clear all
+                    </span>
+                  )}
                 </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {billNotifications.length > 0 ? (
+                    billNotifications.map((bill) => (
+                      <div 
+                        key={bill.id} 
+                        className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-b border-slate-50 dark:border-slate-700"
+                        onClick={() => {
+                          navigate('/transactions');
+                          setShowNotifications(false);
+                        }}
+                      >
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-warning-100 dark:bg-warning-900/50 flex items-center justify-center flex-shrink-0">
+                            <CreditCard className="w-4 h-4 text-warning-600 dark:text-warning-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">Upcoming Bill</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{bill.description || bill.merchant || 'Expense'}</p>
+                            <p className="text-xs text-warning-600 dark:text-warning-400 mt-1 font-medium">
+                              {new Date(bill.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-b border-slate-50 dark:border-slate-700">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-success-100 dark:bg-success-900/50 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-4 h-4 text-success-600 dark:text-success-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">All caught up!</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">No upcoming bills</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
                 <div className="max-h-80 overflow-y-auto">
                   <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-b border-slate-50 dark:border-slate-700">
                     <div className="flex gap-3">
