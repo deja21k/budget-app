@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import * as path from 'path';
+import rateLimit from 'express-rate-limit';
 import { initializeDatabase, closeDatabase } from './config/database';
+import { startBackupScheduler } from './services/backup.service';
 import transactionRoutes from './routes/transaction.routes';
 import receiptRoutes from './routes/receipt.routes';
 import categoryRoutes from './routes/category.routes';
@@ -9,8 +11,9 @@ import ocrRoutes from './routes/ocr.routes';
 import insightsRoutes from './routes/insights.routes';
 import exportRoutes from './routes/export.routes';
 import shoppingListRoutes from './routes/shopping-list.routes';
+import authRoutes from './routes/auth.routes';
+import accountMiddleware from './middleware/account';
 import {
-  rateLimiter,
   jsonErrorHandler,
   securityHeaders,
   validateRequestSize,
@@ -24,16 +27,46 @@ const PORT = process.env.PORT || 3000;
 // Apply security headers
 app.use(securityHeaders);
 
-// Configure CORS with specific origin (update for production)
+// Account isolation middleware
+app.use(accountMiddleware);
+
+// Configure CORS - restrict to known origins in production
+const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) 
+  || (process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5173', 'http://localhost:3001']);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' 
+    ? corsOrigins 
+    : (process.env.CORS_ORIGIN || 'http://localhost:5173'),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-account-id'],
+  maxAge: 86400,
 }));
 
-// Apply rate limiting to all requests
-app.use(rateLimiter);
+// Rate limiting - production ready with express-rate-limit
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+  keyGenerator: (req) => req.ip || req.socket.remoteAddress || 'unknown',
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Strict limit for auth endpoints
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts, please try again later' },
+  skipSuccessfulRequests: false,
+});
+
+app.use('/api/', apiLimiter);
+
+// Apply stricter rate limiting to auth routes
+app.use('/api/auth', authLimiter);
 
 // JSON parsing with size limits and error handling
 app.use(express.json({ 
@@ -50,6 +83,12 @@ app.use(validateRequestSize(1024 * 1024)); // 1MB
 
 initializeDatabase();
 
+// Start backup scheduler (runs daily at 2 AM by default)
+if (process.env.NODE_ENV !== 'test') {
+  startBackupScheduler();
+}
+
+app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/categories', categoryRoutes);
