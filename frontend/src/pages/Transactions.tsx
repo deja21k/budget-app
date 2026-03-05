@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, RefreshCw, TrendingUp, TrendingDown, DollarSign, Calendar, Wallet } from 'lucide-react';
+import { gsap } from 'gsap';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import TransactionForm from '../components/TransactionForm';
@@ -139,16 +140,16 @@ const Transactions = () => {
       amount: summary.net_amount,
       icon: DollarSign,
       gradient: 'from-primary-500 to-accent-500',
-      bgGradient: 'from-primary-50 to-accent-50',
-      color: 'text-slate-900',
+      bgGradient: 'from-primary-50 dark:from-primary-900/30 to-accent-50 dark:to-accent-900/30',
+      color: 'text-slate-900 dark:text-white',
     },
     {
       title: 'This Month Income',
       amount: thisMonthStats.income,
       icon: TrendingUp,
       gradient: 'from-success-500 to-emerald-400',
-      bgGradient: 'from-success-50 to-emerald-50',
-      color: 'text-success-600',
+      bgGradient: 'from-success-50 dark:from-success-900/30 to-emerald-50 dark:to-emerald-900/30',
+      color: 'text-success-600 dark:text-success-400',
       prefix: '+',
     },
     {
@@ -156,8 +157,8 @@ const Transactions = () => {
       amount: thisMonthStats.expense,
       icon: TrendingDown,
       gradient: 'from-danger-500 to-rose-400',
-      bgGradient: 'from-danger-50 to-rose-50',
-      color: 'text-danger-600',
+      bgGradient: 'from-danger-50 dark:from-danger-900/30 to-rose-50 dark:to-rose-900/30',
+      color: 'text-danger-600 dark:text-danger-400',
       prefix: '-',
     },
     {
@@ -165,8 +166,8 @@ const Transactions = () => {
       amount: summary.transaction_count,
       icon: Calendar,
       gradient: 'from-slate-500 to-slate-400',
-      bgGradient: 'from-slate-100 to-slate-50',
-      color: 'text-slate-900',
+      bgGradient: 'from-slate-100 dark:from-slate-700 to-slate-50 dark:to-slate-800',
+      color: 'text-slate-900 dark:text-white',
       isCount: true,
     },
   ];

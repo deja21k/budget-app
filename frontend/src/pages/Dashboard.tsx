@@ -131,7 +131,7 @@ const Dashboard = () => {
       isPositive: monthlyStats.change.income >= 0,
       icon: Wallet,
       gradient: 'from-primary-500 to-accent-500',
-      bgGradient: 'from-primary-50 to-accent-50',
+      bgGradient: 'from-primary-50 dark:from-primary-900/30 to-accent-50 dark:to-accent-900/30',
     },
     {
       title: 'This Month Income',
@@ -140,7 +140,7 @@ const Dashboard = () => {
       isPositive: monthlyStats.change.income >= 0,
       icon: TrendingUp,
       gradient: 'from-success-500 to-emerald-400',
-      bgGradient: 'from-success-50 to-emerald-50',
+      bgGradient: 'from-success-50 dark:from-success-900/30 to-emerald-50 dark:to-emerald-900/30',
     },
     {
       title: 'This Month Expenses',
@@ -149,7 +149,7 @@ const Dashboard = () => {
       isPositive: monthlyStats.change.expense < 0,
       icon: TrendingDown,
       gradient: 'from-danger-500 to-rose-400',
-      bgGradient: 'from-danger-50 to-rose-50',
+      bgGradient: 'from-danger-50 dark:from-danger-900/30 to-rose-50 dark:to-rose-900/30',
     },
     {
       title: 'Pending Receipts',
@@ -158,7 +158,7 @@ const Dashboard = () => {
       isPositive: true,
       icon: ReceiptIcon,
       gradient: 'from-warning-500 to-amber-400',
-      bgGradient: 'from-warning-50 to-amber-50',
+      bgGradient: 'from-warning-50 dark:from-warning-900/30 to-amber-50 dark:to-amber-900/30',
     },
   ];
 
