@@ -600,70 +600,62 @@ const Insights = () => {
 
               <div className="grid grid-cols-2 gap-5">
                 {/* Weekday */}
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900">Weekdays</p>
-                      <p className="text-xs text-slate-500">Mon - Fri</p>
+                      <p className="font-bold text-slate-900 dark:text-white">Weekdays</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Mon - Fri</p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Daily Avg</span>
-                      <span className="font-bold text-slate-900">{formatCurrency(weekendData.weekdayAvg, currency)}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Daily Avg</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(weekendData.weekdayAvg, currency)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Total</span>
-                      <span className="font-bold text-slate-900">{formatCurrency(weekendData.weekdayTotal, currency)}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Total</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(weekendData.weekdayTotal, currency)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Transactions</span>
-                      <span className="font-medium text-slate-900">{weekendData.weekdayCount}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Transactions</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{weekendData.weekdayCount}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Weekend */}
-                <div className={`p-5 rounded-2xl border ${
-                  weekendData.percentHigher > 50 
-                    ? 'bg-danger-50 border-danger-100' 
-                    : 'bg-success-50 border-success-100'
-                }`}>
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      weekendData.percentHigher > 50 ? 'bg-danger-100' : 'bg-success-100'
-                    }`}>
-                      <CalendarDays className={`w-5 h-5 ${
-                        weekendData.percentHigher > 50 ? 'text-danger-600' : 'text-success-600'
-                      }`} />
+                    <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                      <CalendarDays className="w-5 h-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900">Weekends</p>
-                      <p className="text-xs text-slate-500">Sat - Sun</p>
+                      <p className="font-bold text-slate-900 dark:text-white">Weekends</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Sat - Sun</p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Daily Avg</span>
-                      <span className="font-bold text-slate-900">{formatCurrency(weekendData.weekendAvg, currency)}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Daily Avg</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(weekendData.weekendAvg, currency)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Total</span>
-                      <span className="font-bold text-slate-900">{formatCurrency(weekendData.weekendTotal, currency)}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Total</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(weekendData.weekendTotal, currency)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">Transactions</span>
-                      <span className="font-medium text-slate-900">{weekendData.weekendCount}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Transactions</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{weekendData.weekendCount}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Comparison */}
-              <div className="mt-6 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="mt-6 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {weekendData.percentHigher > 0 ? (
@@ -674,11 +666,11 @@ const Insights = () => {
                       <ArrowDownRight className="w-6 h-6 text-success-500" />
                     )}
                     <div>
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-slate-900 dark:text-white">
                         Weekend spending is {Math.abs(weekendData.percentHigher).toFixed(0)}% 
                         {weekendData.percentHigher > 0 ? 'higher' : 'lower'}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         {weekendData.percentHigher > 50 
                           ? 'Consider setting a weekend spending limit' 
                           : weekendData.percentHigher > 0 
@@ -688,10 +680,10 @@ const Insights = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white">
                       {formatCurrency(Math.abs(weekendData.difference), currency)}
                     </p>
-                    <p className="text-xs text-slate-500">per day difference</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">per day difference</p>
                   </div>
                 </div>
               </div>

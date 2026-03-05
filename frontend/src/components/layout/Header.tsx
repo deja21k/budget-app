@@ -417,12 +417,12 @@ const Header = () => {
                       setShowProfile(false);
                       window.location.href = '/settings';
                     }}
-                    className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-50 transition-colors text-left group"
+                    className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left group"
                   >
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-200 transition-colors">
-                      <Settings className="w-4 h-4 text-slate-600" />
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
+                      <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                     </div>
-                    <span className="text-sm text-slate-700 group-hover:text-slate-900 font-medium">Settings</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white font-medium">Settings</span>
                   </button>
                   
                   {accounts.length > 1 && (
@@ -430,10 +430,10 @@ const Header = () => {
                       onClick={() => {
                         setShowDeleteModal(true);
                       }}
-                      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-danger-50 transition-colors text-left text-danger-600 group"
+                      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-900/30 transition-colors text-left text-danger-600 dark:text-danger-400 group"
                     >
-                      <div className="w-8 h-8 rounded-full bg-danger-50 flex items-center justify-center flex-shrink-0 group-hover:bg-danger-100 transition-colors">
-                        <Trash2 className="w-4 h-4 text-danger-600" />
+                      <div className="w-8 h-8 rounded-full bg-danger-50 dark:bg-danger-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-danger-100 dark:group-hover:bg-danger-900/50 transition-colors">
+                        <Trash2 className="w-4 h-4 text-danger-600 dark:text-danger-400" />
                       </div>
                       <span className="text-sm font-medium">Remove Account</span>
                     </button>
