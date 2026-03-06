@@ -30,14 +30,14 @@ app.use(securityHeaders);
 // Account isolation middleware
 app.use(accountMiddleware);
 
-// Configure CORS - restrict to known origins in production
+// Configure CORS - restrict to known origins
 const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) 
-  || (process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5173', 'http://localhost:3001']);
+  || ['http://localhost', 'http://localhost:3000', 'http://localhost:5173'];
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? corsOrigins 
-    : (process.env.CORS_ORIGIN || 'http://localhost:5173'),
+    : corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-account-id'],
