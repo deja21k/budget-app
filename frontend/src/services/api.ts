@@ -10,6 +10,52 @@ import {
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
+const isOnline = (): boolean => typeof navigator !== 'undefined' ? navigator.onLine : true;
+
+const getAccountId = (): string => {
+  try {
+    const stored = localStorage.getItem('account_state');
+    if (stored) {
+      const { state } = JSON.parse(stored);
+      if (state?.currentAccountId) return state.currentAccountId;
+    }
+  } catch {
+    // Ignore errors
+  }
+  return 'default';
+};
+
+const DB_CACHE_KEYS = {
+  transactions: 'cache_transactions',
+  categories: 'cache_categories',
+  receipts: 'cache_receipts',
+  summary: 'cache_summary',
+};
+
+function getCachedData<T>(key: string): T | null {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const { data, timestamp } = JSON.parse(stored);
+      const CACHE_TTL = 5 * 60 * 1000;
+      if (Date.now() - timestamp < CACHE_TTL) {
+        return data as T;
+      }
+    }
+  } catch {
+    // Ignore cache errors
+  }
+  return null;
+}
+
+function setCachedData<T>(key: string, data: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (e) {
+    console.warn('Failed to cache data:', e);
+  }
+}
+
 // Circuit breakers for different API endpoints
 const circuitBreakers = {
   transactions: createCircuitBreaker(5, 30000),
@@ -70,10 +116,16 @@ const safeFetch = async <T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
+  const accountId = getAccountId();
+  
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
+      headers: {
+        ...options?.headers,
+        'x-account-id': accountId,
+      },
     });
     
     clearTimeout(timeoutId);
@@ -213,6 +265,11 @@ export const receiptService = {
 
 export const categoryService = {
   async getCategories(type?: 'income' | 'expense'): Promise<Category[]> {
+    if (!isOnline()) {
+      const cached = getCachedData<Category[]>(DB_CACHE_KEYS.categories);
+      if (cached) return cached;
+    }
+    
     return withRetry(async () => {
       const params = type ? `?type=${type}` : '';
       const result = await safeFetch<Category[]>(
@@ -220,11 +277,17 @@ export const categoryService = {
         undefined,
         5000
       );
-      return isArray<Category>(result) ? result : [];
+      const categories = isArray<Category>(result) ? result : [];
+      setCachedData(DB_CACHE_KEYS.categories, categories);
+      return categories;
     });
   },
 
   async createCategory(data: Partial<Category>): Promise<Category> {
+    if (!isOnline()) {
+      throw new Error('offline');
+    }
+    
     return withRetry(() =>
       safeFetch<Category>(`${API_BASE_URL}/categories`, {
         method: 'POST',
@@ -339,6 +402,11 @@ export const categoryService = {
 
 export const transactionService = {
   async getTransactions(filters?: TransactionFilters): Promise<Transaction[]> {
+    if (!isOnline()) {
+      const cached = getCachedData<Transaction[]>(DB_CACHE_KEYS.transactions);
+      if (cached) return cached;
+    }
+    
     return withRetry(async () => {
       const params = new URLSearchParams();
       
@@ -356,7 +424,9 @@ export const transactionService = {
         10000
       );
       
-      return isArray<Transaction>(result) ? result : [];
+      const transactions = isArray<Transaction>(result) ? result : [];
+      setCachedData(DB_CACHE_KEYS.transactions, transactions);
+      return transactions;
     });
   },
 
@@ -382,6 +452,10 @@ export const transactionService = {
   },
 
   async createTransaction(data: CreateTransactionInput): Promise<Transaction> {
+    if (!isOnline()) {
+      throw new Error('offline');
+    }
+    
     return withRetry(() =>
       circuitBreakers.transactions.execute(() =>
         safeFetch<Transaction>(`${API_BASE_URL}/transactions`, {
@@ -425,6 +499,16 @@ export const transactionService = {
     net_amount: number;
     transaction_count: number;
   }> {
+    if (!isOnline()) {
+      const cached = getCachedData<{
+        total_income: number;
+        total_expense: number;
+        net_amount: number;
+        transaction_count: number;
+      }>(DB_CACHE_KEYS.summary);
+      if (cached) return cached;
+    }
+    
     return withRetry(async () => {
       const params = new URLSearchParams();
       if (startDate) params.append('start_date', startDate);
@@ -437,12 +521,15 @@ export const transactionService = {
         transaction_count: number;
       }>(`${API_BASE_URL}/transactions/summary?${params}`, undefined, 5000);
       
-      return {
+      const summary = {
         total_income: safeNumber(result.total_income, 0) ?? 0,
         total_expense: safeNumber(result.total_expense, 0) ?? 0,
         net_amount: safeNumber(result.net_amount) ?? 0,
         transaction_count: safeNumber(result.transaction_count, 0) ?? 0,
       };
+      
+      setCachedData(DB_CACHE_KEYS.summary, summary);
+      return summary;
     });
   },
 };
@@ -615,5 +702,14 @@ export const settingsService = {
       console.error('Failed to reset settings:', error);
     }
     return this.getSettings();
+  },
+};
+
+export const offlineUtils = {
+  isOnline,
+  getCachedData,
+  setCachedData,
+  clearCache: () => {
+    Object.values(DB_CACHE_KEYS).forEach(key => localStorage.removeItem(key));
   },
 };
