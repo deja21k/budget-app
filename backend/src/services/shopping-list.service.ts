@@ -10,9 +10,10 @@ import {
 export class ShoppingListService {
   private db = getDatabase();
 
-  async getAll(): Promise<ShoppingListItem[]> {
+  async getAll(accountId: string | number): Promise<ShoppingListItem[]> {
     const stmt = this.db.prepare(`
       SELECT * FROM shopping_list 
+      WHERE account_id = ?
       ORDER BY 
         is_completed ASC,
         CASE importance 
@@ -22,21 +23,22 @@ export class ShoppingListService {
         END,
         created_at DESC
     `);
-    return stmt.all() as ShoppingListItem[];
+    return stmt.all(accountId) as ShoppingListItem[];
   }
 
-  async getById(id: number): Promise<ShoppingListItem | null> {
-    const stmt = this.db.prepare('SELECT * FROM shopping_list WHERE id = ?');
-    return stmt.get(id) as ShoppingListItem | null;
+  async getById(id: number, accountId: string | number): Promise<ShoppingListItem | null> {
+    const stmt = this.db.prepare('SELECT * FROM shopping_list WHERE id = ? AND account_id = ?');
+    return stmt.get(id, accountId) as ShoppingListItem | null;
   }
 
-  async create(input: CreateShoppingListItemInput): Promise<ShoppingListItem> {
+  async create(input: CreateShoppingListItemInput, accountId: string | number): Promise<ShoppingListItem> {
     const stmt = this.db.prepare(`
-      INSERT INTO shopping_list (name, price, quantity, importance, category, notes)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO shopping_list (account_id, name, price, quantity, importance, category, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
     
     const result = stmt.run(
+      accountId,
       input.name,
       input.price,
       input.quantity || 1,
@@ -45,11 +47,11 @@ export class ShoppingListService {
       input.notes || null
     );
     
-    return this.getById(result.lastInsertRowid as number) as Promise<ShoppingListItem>;
+    return this.getById(result.lastInsertRowid as number, accountId) as Promise<ShoppingListItem>;
   }
 
-  async update(id: number, input: UpdateShoppingListItemInput): Promise<ShoppingListItem | null> {
-    const existing = await this.getById(id);
+  async update(id: number, input: UpdateShoppingListItemInput, accountId: string | number): Promise<ShoppingListItem | null> {
+    const existing = await this.getById(id, accountId);
     if (!existing) return null;
 
     const updates: string[] = [];
@@ -92,30 +94,31 @@ export class ShoppingListService {
 
     updates.push('updated_at = CURRENT_TIMESTAMP');
     values.push(id);
+    values.push(accountId);
 
     const stmt = this.db.prepare(`
-      UPDATE shopping_list SET ${updates.join(', ')} WHERE id = ?
+      UPDATE shopping_list SET ${updates.join(', ')} WHERE id = ? AND account_id = ?
     `);
     stmt.run(...values);
 
-    return this.getById(id);
+    return this.getById(id, accountId);
   }
 
-  async delete(id: number): Promise<boolean> {
-    const stmt = this.db.prepare('DELETE FROM shopping_list WHERE id = ?');
-    const result = stmt.run(id);
+  async delete(id: number, accountId: string | number): Promise<boolean> {
+    const stmt = this.db.prepare('DELETE FROM shopping_list WHERE id = ? AND account_id = ?');
+    const result = stmt.run(id, accountId);
     return result.changes > 0;
   }
 
-  async toggleComplete(id: number): Promise<ShoppingListItem | null> {
-    const existing = await this.getById(id);
+  async toggleComplete(id: number, accountId: string | number): Promise<ShoppingListItem | null> {
+    const existing = await this.getById(id, accountId);
     if (!existing) return null;
     
-    return this.update(id, { is_completed: !existing.is_completed });
+    return this.update(id, { is_completed: !existing.is_completed }, accountId);
   }
 
-  async getSummary(): Promise<ShoppingListSummary> {
-    const items = await this.getAll();
+  async getSummary(accountId: string | number): Promise<ShoppingListSummary> {
+    const items = await this.getAll(accountId);
     
     const totalItems = items.length;
     const completedItems = items.filter(i => i.is_completed).length;
@@ -151,8 +154,8 @@ export class ShoppingListService {
     };
   }
 
-  async getSpendingPrediction(monthlyBudget: number = 1000): Promise<SpendingPrediction> {
-    const summary = await this.getSummary();
+  async getSpendingPrediction(monthlyBudget: number = 1000, accountId: string | number): Promise<SpendingPrediction> {
+    const summary = await this.getSummary(accountId);
     
     const pendingHighImportance = summary.by_importance.high.price;
     const pendingMediumImportance = summary.by_importance.medium.price;
@@ -182,9 +185,9 @@ export class ShoppingListService {
     };
   }
 
-  async clearCompleted(): Promise<number> {
-    const stmt = this.db.prepare('DELETE FROM shopping_list WHERE is_completed = 1');
-    const result = stmt.run();
+  async clearCompleted(accountId: string | number): Promise<number> {
+    const stmt = this.db.prepare('DELETE FROM shopping_list WHERE is_completed = 1 AND account_id = ?');
+    const result = stmt.run(accountId);
     return result.changes;
   }
 }

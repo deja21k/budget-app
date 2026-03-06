@@ -14,12 +14,12 @@ export class ExportService {
   private db = getDatabase();
 
   /**
-   * Export all data as JSON
+   * Export all data as JSON (account-specific)
    */
-  exportToJSON(): ExportData {
-    const categories = this.db.prepare('SELECT * FROM categories ORDER BY created_at DESC').all();
-    const transactions = this.db.prepare('SELECT * FROM transactions ORDER BY date DESC').all();
-    const receipts = this.db.prepare('SELECT * FROM receipts ORDER BY created_at DESC').all();
+  exportToJSON(accountId: string | number): ExportData {
+    const categories = this.db.prepare('SELECT * FROM categories WHERE account_id = ? ORDER BY created_at DESC').all(accountId);
+    const transactions = this.db.prepare('SELECT * FROM transactions WHERE account_id = ? ORDER BY date DESC').all(accountId);
+    const receipts = this.db.prepare('SELECT * FROM receipts WHERE account_id = ? ORDER BY created_at DESC').all(accountId);
 
     return {
       exported_at: new Date().toISOString(),
@@ -31,9 +31,9 @@ export class ExportService {
   }
 
   /**
-   * Export transactions as CSV
+   * Export transactions as CSV (account-specific)
    */
-  exportTransactionsToCSV(): string {
+  exportTransactionsToCSV(accountId: string | number): string {
     const transactions = this.db.prepare(`
       SELECT 
         t.id,
@@ -90,9 +90,9 @@ export class ExportService {
   }
 
   /**
-   * Export summary as CSV
+   * Export summary as CSV (account-specific)
    */
-  exportSummaryToCSV(): string {
+  exportSummaryToCSV(accountId: string | number): string {
     const summary = this.db.prepare(`
       SELECT 
         c.name as category,
@@ -102,10 +102,11 @@ export class ExportService {
         SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END) as total_expenses,
         SUM(CASE WHEN t.regret_flag = 'regret' THEN t.amount ELSE 0 END) as total_regretted
       FROM categories c
-      LEFT JOIN transactions t ON c.id = t.category_id
+      LEFT JOIN transactions t ON c.id = t.category_id AND t.account_id = ?
+      WHERE c.account_id = ?
       GROUP BY c.id
       ORDER BY total_expenses DESC
-    `).all();
+    `).all(accountId, accountId);
 
     const headers = ['Category', 'Type', 'Transaction Count', 'Total Income', 'Total Expenses', 'Total Regretted'];
     

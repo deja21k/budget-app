@@ -120,38 +120,38 @@ export class TransactionService {
   /**
    * Create transaction items
    */
-  private createItems(db: ReturnType<typeof getDatabase>, transactionId: number, items: CreateTransactionItemInput[]): void {
+  private createItems(db: ReturnType<typeof getDatabase>, transactionId: number, items: CreateTransactionItemInput[], accountId: number): void {
     const stmt = db.prepare(`
-      INSERT INTO transaction_items (transaction_id, name, quantity, unit_price, total_price)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO transaction_items (account_id, transaction_id, name, quantity, unit_price, total_price)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
     
     for (const item of items) {
       const totalPrice = item.total_price ?? (item.unit_price * (item.quantity ?? 1));
-      stmt.run(transactionId, item.name, item.quantity ?? 1, item.unit_price, totalPrice);
+      stmt.run(accountId, transactionId, item.name, item.quantity ?? 1, item.unit_price, totalPrice);
     }
   }
 
   /**
    * Get items for a transaction
    */
-  private getItems(transactionId: number): TransactionItem[] {
-    const stmt = this.db.prepare('SELECT * FROM transaction_items WHERE transaction_id = ?');
-    return stmt.all(transactionId) as TransactionItem[];
+  private getItems(transactionId: number, accountId: number): TransactionItem[] {
+    const stmt = this.db.prepare('SELECT * FROM transaction_items WHERE transaction_id = ? AND account_id = ?');
+    return stmt.all(transactionId, accountId) as TransactionItem[];
   }
 
   /**
    * Delete all items for a transaction
    */
-  private deleteItems(db: ReturnType<typeof getDatabase>, transactionId: number): void {
-    const stmt = db.prepare('DELETE FROM transaction_items WHERE transaction_id = ?');
-    stmt.run(transactionId);
+  private deleteItems(db: ReturnType<typeof getDatabase>, transactionId: number, accountId: number): void {
+    const stmt = db.prepare('DELETE FROM transaction_items WHERE transaction_id = ? AND account_id = ?');
+    stmt.run(transactionId, accountId);
   }
 
   /**
-   * Create a new transaction with validation
+   * Create a new transaction with validation (account-aware)
    */
-  create(input: CreateTransactionInput): Transaction {
+  create(input: CreateTransactionInput, accountId: number): Transaction {
     const validation = this.validateCreateInput(input);
     if (!validation.valid || !validation.sanitized) {
       throw new Error(validation.error || 'Invalid input');
@@ -162,12 +162,13 @@ export class TransactionService {
     return withTransaction((db) => {
       const stmt = db.prepare(`
         INSERT INTO transactions (
-          type, amount, category_id, description, merchant, 
+          account_id, type, amount, category_id, description, merchant, 
           date, receipt_image_path, ocr_confidence, is_recurring, recurring_frequency, regret_flag, payment_method
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = stmt.run(
+        accountId,
         sanitized.type,
         sanitized.amount,
         sanitized.category_id ?? null,
@@ -184,12 +185,11 @@ export class TransactionService {
 
       const newTransactionId = result.lastInsertRowid as number;
       
-      // Create items if provided
       if (sanitized.items && sanitized.items.length > 0) {
-        this.createItems(db, newTransactionId, sanitized.items);
+        this.createItems(db, newTransactionId, sanitized.items, accountId);
       }
       
-      const newTransaction = this.findById(newTransactionId);
+      const newTransaction = this.findById(newTransactionId, accountId);
       if (!newTransaction) {
         throw new Error('Failed to create transaction');
       }
@@ -199,9 +199,9 @@ export class TransactionService {
   }
 
   /**
-    * Find transaction by ID with validation
+    * Find transaction by ID with validation (account-aware)
     */
-   findById(id: number): Transaction | null {
+   findById(id: number, accountId: number): Transaction | null {
     const validatedId = validateId(id, 'Transaction');
     
     const stmt = this.db.prepare(`
@@ -211,21 +211,21 @@ export class TransactionService {
         c.color as category_color
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
-      WHERE t.id = ?
+      WHERE t.id = ? AND t.account_id = ?
     `);
-    const transaction = stmt.get(validatedId) as Transaction | null;
+    const transaction = stmt.get(validatedId, accountId) as Transaction | null;
     
     if (transaction) {
-      transaction.items = this.getItems(validatedId);
+      transaction.items = this.getItems(validatedId, accountId);
     }
     
     return transaction;
    }
 
   /**
-   * Find all transactions with filters
+   * Find all transactions with filters (account-aware)
    */
-  findAll(filters: TransactionFilters = {}): Transaction[] {
+  findAll(filters: TransactionFilters = {}, accountId: number): Transaction[] {
     let query = `
       SELECT 
         t.*,
@@ -233,9 +233,9 @@ export class TransactionService {
         c.color as category_color
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
-      WHERE 1=1
+      WHERE t.account_id = ?
     `;
-    const params: (string | number)[] = [];
+    const params: (string | number)[] = [accountId];
 
     // Validate and apply filters
     if (filters.type) {
@@ -301,20 +301,20 @@ export class TransactionService {
     
     // Load items for each transaction
     for (const transaction of transactions) {
-      transaction.items = this.getItems(transaction.id);
+      transaction.items = this.getItems(transaction.id, accountId);
     }
     
     return transactions;
   }
 
   /**
-   * Update transaction with validation
+   * Update transaction with validation (account-aware)
    */
-  update(id: number, input: UpdateTransactionInput): Transaction | null {
+  update(id: number, input: UpdateTransactionInput, accountId: number): Transaction | null {
     const validatedId = validateId(id, 'Transaction');
     
     return withTransaction((db) => {
-      const existing = this.findById(validatedId);
+      const existing = this.findById(validatedId, accountId);
       if (!existing) return null;
 
       const updates: string[] = [];
@@ -411,7 +411,7 @@ export class TransactionService {
       // Handle items update
       if (input.items !== undefined) {
         // Delete existing items and insert new ones
-        this.deleteItems(db, validatedId);
+        this.deleteItems(db, validatedId, accountId);
         
         if (input.items && input.items.length > 0) {
           // Validate items
@@ -442,7 +442,7 @@ export class TransactionService {
             });
           }
           
-          this.createItems(db, validatedId, sanitizedItems);
+          this.createItems(db, validatedId, sanitizedItems, accountId);
         }
       }
 
@@ -450,14 +450,15 @@ export class TransactionService {
 
       updates.push('updated_at = CURRENT_TIMESTAMP');
       values.push(validatedId);
+      values.push(accountId);
 
       const stmt = db.prepare(`
-        UPDATE transactions SET ${updates.join(', ')} WHERE id = ?
+        UPDATE transactions SET ${updates.join(', ')} WHERE id = ? AND account_id = ?
       `);
 
       stmt.run(...values);
       
-      const updated = this.findById(validatedId);
+      const updated = this.findById(validatedId, accountId);
       if (!updated) {
         throw new Error('Failed to retrieve updated transaction');
       }
@@ -467,31 +468,30 @@ export class TransactionService {
   }
 
   /**
-   * Delete transaction with validation
+   * Delete transaction with validation (account-aware)
    */
-  delete(id: number): boolean {
+  delete(id: number, accountId: number): boolean {
     const validatedId = validateId(id, 'Transaction');
     
     return withTransaction((db) => {
-      // Check if transaction exists first
-      const existing = this.findById(validatedId);
+      const existing = this.findById(validatedId, accountId);
       if (!existing) return false;
       
-      const stmt = db.prepare('DELETE FROM transactions WHERE id = ?');
-      const result = stmt.run(validatedId);
+      const stmt = db.prepare('DELETE FROM transactions WHERE id = ? AND account_id = ?');
+      const result = stmt.run(validatedId, accountId);
       return result.changes > 0;
     });
   }
 
   /**
-   * Get transaction summary with filters
+   * Get transaction summary with filters (account-aware)
    */
-  getSummary(filters: Omit<TransactionFilters, 'limit' | 'offset'> = {}): TransactionSummary {
-    let incomeQuery = 'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = ?';
-    let expenseQuery = 'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = ?';
-    let countQuery = 'SELECT COUNT(*) as count FROM transactions WHERE 1=1';
+  getSummary(filters: Omit<TransactionFilters, 'limit' | 'offset'> = {}, accountId: number): TransactionSummary {
+    let incomeQuery = 'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = ? AND account_id = ?';
+    let expenseQuery = 'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = ? AND account_id = ?';
+    let countQuery = 'SELECT COUNT(*) as count FROM transactions WHERE account_id = ?';
     
-    const params: (string | number)[] = [];
+    const params: (string | number)[] = [accountId];
 
     if (filters.start_date) {
       const startDate = safeDate(filters.start_date);

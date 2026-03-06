@@ -10,7 +10,8 @@ export class ExportController {
    */
   exportJSON(req: Request, res: Response) {
     try {
-      const data = exportService.exportToJSON();
+      const accountId = (req as any).accountId;
+      const data = exportService.exportToJSON(accountId);
       
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', `attachment; filename="budget-export-${new Date().toISOString().split('T')[0]}.json"`);
@@ -30,7 +31,8 @@ export class ExportController {
    */
   exportTransactionsCSV(req: Request, res: Response) {
     try {
-      const csv = exportService.exportTransactionsToCSV();
+      const accountId = (req as any).accountId;
+      const csv = exportService.exportTransactionsToCSV(accountId);
       
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="transactions-${new Date().toISOString().split('T')[0]}.csv"`);
@@ -50,7 +52,8 @@ export class ExportController {
    */
   exportSummaryCSV(req: Request, res: Response) {
     try {
-      const csv = exportService.exportSummaryToCSV();
+      const accountId = (req as any).accountId;
+      const csv = exportService.exportSummaryToCSV(accountId);
       
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="summary-${new Date().toISOString().split('T')[0]}.csv"`);

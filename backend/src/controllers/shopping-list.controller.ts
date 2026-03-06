@@ -6,7 +6,8 @@ import { predictPrices } from '../services/price-prediction.service';
 export class ShoppingListController {
   async getAll(req: Request, res: Response) {
     try {
-      const items = await shoppingListService.getAll();
+      const accountId = (req as any).accountId;
+      const items = await shoppingListService.getAll(accountId);
       res.json(items);
     } catch (error) {
       console.error('Error fetching shopping list:', error);
@@ -17,7 +18,8 @@ export class ShoppingListController {
   async getById(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
-      const item = await shoppingListService.getById(id);
+      const accountId = (req as any).accountId;
+      const item = await shoppingListService.getById(id, accountId);
       
       if (!item) {
         return res.status(404).json({ error: 'Item not found' });
@@ -33,12 +35,13 @@ export class ShoppingListController {
   async create(req: Request, res: Response) {
     try {
       const input: CreateShoppingListItemInput = req.body;
+      const accountId = (req as any).accountId;
       
       if (!input.name || input.price === undefined) {
         return res.status(400).json({ error: 'Name and price are required' });
       }
       
-      const item = await shoppingListService.create(input);
+      const item = await shoppingListService.create(input, accountId);
       res.status(201).json(item);
     } catch (error) {
       console.error('Error creating shopping list item:', error);
@@ -49,9 +52,10 @@ export class ShoppingListController {
   async update(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
+      const accountId = (req as any).accountId;
       const input: UpdateShoppingListItemInput = req.body;
       
-      const item = await shoppingListService.update(id, input);
+      const item = await shoppingListService.update(id, input, accountId);
       
       if (!item) {
         return res.status(404).json({ error: 'Item not found' });
@@ -67,7 +71,8 @@ export class ShoppingListController {
   async delete(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await shoppingListService.delete(id);
+      const accountId = (req as any).accountId;
+      const deleted = await shoppingListService.delete(id, accountId);
       
       if (!deleted) {
         return res.status(404).json({ error: 'Item not found' });
@@ -83,7 +88,8 @@ export class ShoppingListController {
   async toggleComplete(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
-      const item = await shoppingListService.toggleComplete(id);
+      const accountId = (req as any).accountId;
+      const item = await shoppingListService.toggleComplete(id, accountId);
       
       if (!item) {
         return res.status(404).json({ error: 'Item not found' });
@@ -98,7 +104,8 @@ export class ShoppingListController {
 
   async getSummary(req: Request, res: Response) {
     try {
-      const summary = await shoppingListService.getSummary();
+      const accountId = (req as any).accountId;
+      const summary = await shoppingListService.getSummary(accountId);
       res.json(summary);
     } catch (error) {
       console.error('Error fetching shopping list summary:', error);
@@ -109,7 +116,8 @@ export class ShoppingListController {
   async getPrediction(req: Request, res: Response) {
     try {
       const monthlyBudget = parseFloat(req.query.budget as string) || 1000;
-      const prediction = await shoppingListService.getSpendingPrediction(monthlyBudget);
+      const accountId = (req as any).accountId;
+      const prediction = await shoppingListService.getSpendingPrediction(monthlyBudget, accountId);
       res.json(prediction);
     } catch (error) {
       console.error('Error fetching spending prediction:', error);
@@ -119,7 +127,8 @@ export class ShoppingListController {
 
   async clearCompleted(req: Request, res: Response) {
     try {
-      const count = await shoppingListService.clearCompleted();
+      const accountId = (req as any).accountId;
+      const count = await shoppingListService.clearCompleted(accountId);
       res.json({ success: true, deleted: count });
     } catch (error) {
       console.error('Error clearing completed items:', error);
